@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { KANBAN_COLUMNS, ITEM_TYPES, statusLabel } from "@/lib/constants";
 import { ItemCard } from "@/components/ItemCard";
+import { seedSampleData } from "@/lib/actions";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +14,8 @@ export default async function BoardPage({
   const sp = await searchParams;
   const typeFilter = sp.type && sp.type !== "ALL" ? sp.type : undefined;
   const q = sp.q?.trim();
+
+  const totalCount = await prisma.item.count();
 
   const items = await prisma.item.findMany({
     where: {
@@ -42,6 +45,7 @@ export default async function BoardPage({
 
   return (
     <div>
+      {totalCount === 0 && <EmptyState />}
       <Filters typeFilter={typeFilter ?? "ALL"} q={q ?? ""} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
@@ -68,6 +72,38 @@ export default async function BoardPage({
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+function EmptyState() {
+  async function seed() {
+    "use server";
+    await seedSampleData();
+  }
+  return (
+    <div className="mb-6 p-6 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between flex-wrap gap-3">
+      <div>
+        <div className="font-semibold text-blue-900">
+          ようこそ 🎨 制作物がまだ登録されていません
+        </div>
+        <div className="text-sm text-blue-800 mt-1">
+          右の「サンプルデータを投入」でデモ用の6件を入れるか、ヘッダーの「+ 新規制作物」から始めてください。
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <form action={seed}>
+          <button className="text-sm px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+            サンプルデータを投入
+          </button>
+        </form>
+        <Link
+          href="/items/new"
+          className="text-sm px-3 py-2 bg-white border border-blue-300 text-blue-700 rounded-md hover:bg-blue-100"
+        >
+          + 新規制作物
+        </Link>
       </div>
     </div>
   );
