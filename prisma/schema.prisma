@@ -1,0 +1,58 @@
+// 制作物管理アプリのデータモデル
+// 社内マーケ部門の販促物（LP / サムネイル / リーフレット / 看板 / のぼり 等）を
+// 進行ステータスとタスクで管理することを主目的とする。
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// 制作物本体
+model Item {
+  id          String   @id @default(cuid())
+  title       String
+  type        String   // "LP" | "THUMBNAIL" | "LEAFLET" | "SIGN" | "BANNER" | "OTHER"
+  status      String   @default("PLANNING")
+  // PLANNING / DESIGNING / REVIEWING / REVISING / DONE / PUBLISHED / ARCHIVED
+  priority    String   @default("NORMAL") // LOW / NORMAL / HIGH / URGENT
+  description String?
+  requester   String?  // 依頼元（部署 / 担当者）
+  assignee    String?  // 制作担当（社内デザイナー / 外注先）
+  dueDate     DateTime?
+  publishedAt DateTime?
+  // 媒体・配信仕様
+  publishUrl  String?  // LPなど公開先URL
+  size        String?  // "1200x630" や "A4" など
+  notes       String?
+  thumbnailUrl String?
+  tags        String?  // カンマ区切りの簡易タグ（MVP）
+  tasks       Task[]
+  comments    Comment[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// チェックリスト形式のタスク
+model Task {
+  id        String   @id @default(cuid())
+  itemId    String
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  title     String
+  done      Boolean  @default(false)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+// 簡易コメント（レビュー指示や修正依頼）
+model Comment {
+  id        String   @id @default(cuid())
+  itemId    String
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  author    String?
+  body      String
+  createdAt DateTime @default(now())
+}

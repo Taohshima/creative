@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --border: #e5e7eb;
+  --text: #111827;
+  --muted: #6b7280;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans",
+    "Yu Gothic", sans-serif;
+}
+
+/* ステータス色 */
+.badge-PLANNING   { background:#f1f5f9; color:#475569; }
+.badge-DESIGNING  { background:#dbeafe; color:#1d4ed8; }
+.badge-REVIEWING  { background:#fef3c7; color:#a16207; }
+.badge-REVISING   { background:#ffe4e6; color:#be123c; }
+.badge-DONE       { background:#dcfce7; color:#15803d; }
+.badge-PUBLISHED  { background:#e0e7ff; color:#4338ca; }
+.badge-ARCHIVED   { background:#f3f4f6; color:#6b7280; }
+
+.badge-URGENT { background:#fee2e2; color:#b91c1c; }
+.badge-HIGH   { background:#fef3c7; color:#a16207; }
+.badge-NORMAL { background:#f1f5f9; color:#475569; }
+.badge-LOW    { background:#f9fafb; color:#9ca3af; }
