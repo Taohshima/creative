@@ -109,7 +109,7 @@ function EmptyState() {
         <div>
           <div className="inline-flex items-center gap-2 text-indigo-700 font-semibold">
             <IconSparkle size={16} />
-            ようこそ Creative PM へ
+            ようこそ Creative管理 へ
           </div>
           <p className="text-[13px] text-zinc-700 mt-1.5 max-w-md">
             制作物がまだ登録されていません。サンプルデータを入れて触ってみるか、新規制作物を作成してください。

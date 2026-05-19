@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Creative PM — 制作物管理",
+  title: "Creative管理 — 制作物管理",
   description: "社内マーケ部門の販促物を、進行ステータスとタスクで管理するアプリ",
 };
 
@@ -36,7 +36,7 @@ export default function RootLayout({
                 <IconLayers size={15} />
               </span>
               <span className="font-semibold tracking-tight text-[15px]">
-                Creative PM
+                Creative管理
               </span>
             </Link>
 
@@ -68,7 +68,7 @@ export default function RootLayout({
         </main>
 
         <footer className="max-w-7xl mx-auto px-6 py-10 text-xs text-zinc-400">
-          Creative PM · 制作物を、まとめて、進める。
+          Creative管理 · 制作物を、まとめて、進める。
         </footer>
       </body>
     </html>
