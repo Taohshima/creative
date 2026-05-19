@@ -32,7 +32,7 @@ export default async function ListPage({
     },
     orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
     include: {
-      _count: { select: { tasks: true, comments: true } },
+      _count: { select: { tasks: true, links: true } },
       tasks: { select: { done: true } },
     },
   });

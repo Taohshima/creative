@@ -7,7 +7,8 @@ import {
   addTask,
   toggleTask,
   deleteTask,
-  addComment,
+  addLink,
+  deleteLink,
   deleteItem,
 } from "@/lib/actions";
 import { StatusBadge, PriorityBadge, TypeBadge } from "@/components/Badge";
@@ -19,7 +20,6 @@ import {
   IconEdit,
   IconTrash,
   IconPlus,
-  IconComment,
 } from "@/components/Icons";
 
 export const dynamic = "force-dynamic";
@@ -34,7 +34,7 @@ export default async function ItemDetailPage({
     where: { id },
     include: {
       tasks: { orderBy: { order: "asc" } },
-      comments: { orderBy: { createdAt: "desc" } },
+      links: { orderBy: { createdAt: "desc" } },
     },
   });
   if (!item) return notFound();
@@ -216,66 +216,96 @@ export default async function ItemDetailPage({
           </form>
         </div>
 
-        {/* コメント */}
+        {/* リンク */}
         <div className="card p-6">
           <h2 className="font-semibold text-[15px] text-zinc-900 mb-3 inline-flex items-center gap-2">
-            <IconComment size={15} />
-            フィードバック
+            <IconExternal size={14} />
+            関連リンク
           </h2>
-          <form
-            action={async (fd) => {
-              "use server";
-              await addComment(item.id, fd);
-            }}
-            className="space-y-2 mb-5"
-          >
-            <input
-              name="author"
-              placeholder="あなたの名前（任意）"
-              className="input"
-            />
-            <textarea
-              name="body"
-              required
-              placeholder="修正依頼や確認事項を書く..."
-              rows={2}
-              className="input resize-y"
-            />
-            <div className="flex justify-end">
-              <button className="btn-primary">投稿</button>
-            </div>
-          </form>
-          <ul className="space-y-4">
-            {item.comments.map((c) => (
-              <li key={c.id} className="flex gap-3">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-100 to-fuchsia-100 grid place-items-center text-[11px] font-semibold text-indigo-700 flex-shrink-0">
-                  {(c.author ?? "?").charAt(0).toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[11.5px] text-zinc-500 mb-0.5">
-                    <span className="font-semibold text-zinc-700">
-                      {c.author ?? "匿名"}
-                    </span>
-                    <span className="mx-1.5">·</span>
-                    {new Date(c.createdAt).toLocaleString("ja-JP", {
-                      month: "numeric",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+          <ul className="space-y-1.5 mb-4">
+            {item.links.map((l) => {
+              const host = safeHost(l.url);
+              const favicon = host
+                ? `https://www.google.com/s2/favicons?domain=${host}&sz=32`
+                : null;
+              return (
+                <li
+                  key={l.id}
+                  className="flex items-center gap-3 group hover:bg-zinc-50 rounded-lg px-2 py-2 transition border border-transparent hover:border-zinc-100"
+                >
+                  <div className="w-7 h-7 rounded-md bg-zinc-100 grid place-items-center flex-shrink-0 overflow-hidden">
+                    {favicon ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={favicon}
+                        alt=""
+                        className="w-4 h-4"
+                      />
+                    ) : (
+                      <IconExternal size={13} className="text-zinc-400" />
+                    )}
                   </div>
-                  <div className="text-[13.5px] text-zinc-800 whitespace-pre-wrap leading-relaxed">
-                    {c.body}
-                  </div>
-                </div>
-              </li>
-            ))}
-            {item.comments.length === 0 && (
-              <li className="text-[13px] text-zinc-400">
-                コメントはまだありません
+                  <a
+                    href={l.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 min-w-0"
+                  >
+                    <div className="text-[13.5px] font-medium text-zinc-900 hover:text-indigo-600 truncate">
+                      {l.title || host || l.url}
+                    </div>
+                    <div className="text-[11.5px] text-zinc-500 truncate">
+                      {l.url}
+                    </div>
+                  </a>
+                  <form
+                    action={async () => {
+                      "use server";
+                      await deleteLink(l.id);
+                    }}
+                  >
+                    <button
+                      className="text-zinc-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition p-1"
+                      title="削除"
+                    >
+                      <IconTrash size={13} />
+                    </button>
+                  </form>
+                </li>
+              );
+            })}
+            {item.links.length === 0 && (
+              <li className="text-[13px] text-zinc-400 px-2 py-2">
+                リンクがまだ追加されていません
               </li>
             )}
           </ul>
+          <form
+            action={async (fd) => {
+              "use server";
+              await addLink(item.id, fd);
+            }}
+            className="space-y-2 pt-3 border-t border-zinc-100"
+          >
+            <input
+              name="url"
+              type="url"
+              required
+              placeholder="https://www.figma.com/file/... または https://drive.google.com/..."
+              className="input"
+            />
+            <div className="flex gap-2">
+              <input
+                name="title"
+                placeholder="表示名（任意・空ならドメイン名）"
+                className="input flex-1"
+              />
+              <button className="btn-primary">
+                <IconPlus size={13} />
+                追加
+              </button>
+            </div>
+          </form>
         </div>
       </div>
 
@@ -359,6 +389,14 @@ export default async function ItemDetailPage({
       </aside>
     </div>
   );
+}
+
+function safeHost(url: string): string | null {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return null;
+  }
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {

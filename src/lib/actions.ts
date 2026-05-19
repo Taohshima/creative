@@ -281,15 +281,20 @@ export async function seedSampleData() {
   revalidatePath("/list");
 }
 
-export async function addComment(itemId: string, formData: FormData) {
-  const body = s(formData.get("body"));
-  if (!body) return;
-  await prisma.comment.create({
+export async function addLink(itemId: string, formData: FormData) {
+  const url = s(formData.get("url"));
+  if (!url) return;
+  await prisma.link.create({
     data: {
       itemId,
-      body,
-      author: s(formData.get("author")) ?? null,
+      url,
+      title: s(formData.get("title")) ?? null,
     },
   });
   revalidatePath(`/items/${itemId}`);
+}
+
+export async function deleteLink(linkId: string) {
+  const l = await prisma.link.delete({ where: { id: linkId } });
+  revalidatePath(`/items/${l.itemId}`);
 }
