@@ -4,6 +4,7 @@ export const ITEM_TYPES = [
   { value: "LEAFLET", label: "リーフレット" },
   { value: "SIGN", label: "看板" },
   { value: "BANNER", label: "のぼり" },
+  { value: "PRODUCT", label: "製品" },
   { value: "OTHER", label: "その他" },
 ] as const;
 

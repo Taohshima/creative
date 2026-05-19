@@ -86,6 +86,7 @@ body {
 .tpill-LEAFLET   { color:#b45309; background:#fffbeb; }
 .tpill-SIGN      { color:#047857; background:#ecfdf5; }
 .tpill-BANNER    { color:#be123c; background:#fff1f2; }
+.tpill-PRODUCT   { color:#0f766e; background:#f0fdfa; }
 .tpill-OTHER     { color:#52525b; background:#f4f4f5; }
 
 /* card stripe (left bar) by type */
@@ -94,6 +95,7 @@ body {
 .stripe-LEAFLET   { background: linear-gradient(180deg,#fbbf24,#d97706); }
 .stripe-SIGN      { background: linear-gradient(180deg,#34d399,#059669); }
 .stripe-BANNER    { background: linear-gradient(180deg,#fb7185,#e11d48); }
+.stripe-PRODUCT   { background: linear-gradient(180deg,#5eead4,#0d9488); }
 .stripe-OTHER     { background: linear-gradient(180deg,#a1a1aa,#52525b); }
 
 /* thumbnail placeholder gradient by type */
@@ -102,6 +104,7 @@ body {
 .thumb-LEAFLET   { background: linear-gradient(135deg,#fffbeb 0%, #fde68a 100%); color:#b45309; }
 .thumb-SIGN      { background: linear-gradient(135deg,#ecfdf5 0%, #a7f3d0 100%); color:#047857; }
 .thumb-BANNER    { background: linear-gradient(135deg,#fff1f2 0%, #fecdd3 100%); color:#be123c; }
+.thumb-PRODUCT   { background: linear-gradient(135deg,#f0fdfa 0%, #99f6e4 100%); color:#0f766e; }
 .thumb-OTHER     { background: linear-gradient(135deg,#f4f4f5 0%, #d4d4d8 100%); color:#52525b; }
 
 /* card */
