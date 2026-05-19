@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { KANBAN_COLUMNS, ITEM_TYPES, statusLabel } from "@/lib/constants";
 import { ItemCard } from "@/components/ItemCard";
-import { seedSampleData } from "@/lib/actions";
+import { seedSampleData, migrateLegacyStatuses } from "@/lib/actions";
 import { IconSearch, IconSparkle, IconPlus } from "@/components/Icons";
 import Link from "next/link";
 
@@ -15,6 +15,9 @@ export default async function BoardPage({
   const sp = await searchParams;
   const typeFilter = sp.type && sp.type !== "ALL" ? sp.type : undefined;
   const q = sp.q?.trim();
+
+  // 廃止ステータスの既存レコードを移行（冪等・no-op once done）
+  await migrateLegacyStatuses();
 
   const totalCount = await prisma.item.count();
 

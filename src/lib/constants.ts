@@ -10,10 +10,8 @@ export const ITEM_TYPES = [
 export const STATUSES = [
   { value: "PLANNING", label: "企画" },
   { value: "DESIGNING", label: "制作中" },
-  { value: "REVIEWING", label: "レビュー" },
   { value: "REVISING", label: "修正中" },
   { value: "DONE", label: "完成" },
-  { value: "PUBLISHED", label: "公開中" },
   { value: "ARCHIVED", label: "アーカイブ" },
 ] as const;
 
@@ -27,10 +25,8 @@ export const PRIORITIES = [
 export const KANBAN_COLUMNS = [
   "PLANNING",
   "DESIGNING",
-  "REVIEWING",
   "REVISING",
   "DONE",
-  "PUBLISHED",
 ] as const;
 
 export function statusLabel(v: string) {

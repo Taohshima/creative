@@ -80,14 +80,23 @@ export async function deleteItem(id: string) {
 export async function setStatus(id: string, status: string) {
   await prisma.item.update({
     where: { id },
-    data: {
-      status,
-      publishedAt: status === "PUBLISHED" ? new Date() : undefined,
-    },
+    data: { status },
   });
   revalidatePath("/");
   revalidatePath("/list");
   revalidatePath(`/items/${id}`);
+}
+
+// REVIEWING / PUBLISHED は廃止。既存レコードを新ステータスに寄せる（冪等）
+export async function migrateLegacyStatuses() {
+  await prisma.item.updateMany({
+    where: { status: "REVIEWING" },
+    data: { status: "DESIGNING" },
+  });
+  await prisma.item.updateMany({
+    where: { status: "PUBLISHED" },
+    data: { status: "DONE" },
+  });
 }
 
 export async function addTask(itemId: string, formData: FormData) {
@@ -169,7 +178,7 @@ export async function seedSampleData() {
     {
       title: "メルマガ用サムネイル（週次）",
       type: "THUMBNAIL",
-      status: "REVIEWING",
+      status: "DESIGNING",
       priority: "NORMAL",
       description: "週次メルマガ用ヘッダーサムネイル",
       requester: "マーケ部 鈴木",
@@ -241,7 +250,7 @@ export async function seedSampleData() {
     {
       title: "ブラックフライデーLP",
       type: "LP",
-      status: "PUBLISHED",
+      status: "DONE",
       priority: "NORMAL",
       description: "BFキャンペーンLP",
       requester: "マーケ部 田中",
@@ -256,12 +265,7 @@ export async function seedSampleData() {
 
   for (const it of items) {
     const { tasks, ...rest } = it;
-    const created = await prisma.item.create({
-      data: {
-        ...rest,
-        publishedAt: rest.status === "PUBLISHED" ? new Date() : null,
-      },
-    });
+    const created = await prisma.item.create({ data: rest });
     for (let i = 0; i < tasks.length; i++) {
       await prisma.task.create({
         data: {

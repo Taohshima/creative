@@ -17,7 +17,7 @@ model Item {
   title       String
   type        String   // "LP" | "THUMBNAIL" | "LEAFLET" | "SIGN" | "BANNER" | "OTHER"
   status      String   @default("PLANNING")
-  // PLANNING / DESIGNING / REVIEWING / REVISING / DONE / PUBLISHED / ARCHIVED
+  // PLANNING / DESIGNING / REVISING / DONE / ARCHIVED
   priority    String   @default("NORMAL") // LOW / NORMAL / HIGH / URGENT
   description String?
   requester   String?  // 依頼元（部署 / 担当者）

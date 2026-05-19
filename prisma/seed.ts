@@ -40,7 +40,7 @@ async function main() {
     {
       title: "メルマガ用サムネイル（週次）",
       type: "THUMBNAIL",
-      status: "REVIEWING",
+      status: "DESIGNING",
       priority: "NORMAL",
       description: "5/20配信のメルマガ用ヘッダーサムネイル",
       requester: "マーケ部 鈴木",
@@ -112,7 +112,7 @@ async function main() {
     {
       title: "ブラックフライデーLP（昨年）",
       type: "LP",
-      status: "PUBLISHED",
+      status: "DONE",
       priority: "NORMAL",
       description: "2025年版BFキャンペーンLP",
       requester: "マーケ部 田中",
@@ -130,7 +130,7 @@ async function main() {
     const created = await prisma.item.create({
       data: {
         ...rest,
-        publishedAt: rest.status === "PUBLISHED" ? new Date() : null,
+        publishedAt: null,
       },
     });
     for (let i = 0; i < tasks.length; i++) {

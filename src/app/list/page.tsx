@@ -108,8 +108,8 @@ export default async function ListPage({
               const overdue =
                 it.dueDate &&
                 new Date(it.dueDate).getTime() < Date.now() &&
-                it.status !== "PUBLISHED" &&
-                it.status !== "DONE";
+                it.status !== "DONE" &&
+                it.status !== "ARCHIVED";
               return (
                 <tr
                   key={it.id}
