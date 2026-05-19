@@ -3,9 +3,9 @@ import {
   ITEM_TYPES,
   STATUSES,
   typeLabel,
-  statusLabel,
 } from "@/lib/constants";
-import { StatusBadge, PriorityBadge } from "@/components/Badge";
+import { StatusBadge, PriorityBadge, TypeBadge } from "@/components/Badge";
+import { IconClock, IconCheck, IconSearch } from "@/components/Icons";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -31,16 +31,28 @@ export default async function ListPage({
         : {}),
     },
     orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
-    include: { _count: { select: { tasks: true } } },
+    include: {
+      _count: { select: { tasks: true, comments: true } },
+      tasks: { select: { done: true } },
+    },
   });
 
   return (
-    <div>
-      <form className="mb-4 flex gap-2 flex-wrap items-center bg-white border border-gray-200 rounded-md p-3">
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-[22px] font-semibold tracking-tight text-zinc-900">
+          一覧
+        </h1>
+        <p className="text-[13px] text-zinc-500 mt-0.5">
+          納期順に並んだ全制作物（{items.length} 件）
+        </p>
+      </div>
+
+      <form className="flex gap-2 flex-wrap items-center bg-white border border-zinc-200 rounded-xl p-2.5 shadow-sm">
         <select
           name="type"
           defaultValue={sp.type ?? "ALL"}
-          className="text-sm border border-gray-300 rounded px-2 py-1"
+          className="input w-auto pr-7"
         >
           <option value="ALL">種別: すべて</option>
           {ITEM_TYPES.map((t) => (
@@ -52,7 +64,7 @@ export default async function ListPage({
         <select
           name="status"
           defaultValue={sp.status ?? "ALL"}
-          className="text-sm border border-gray-300 rounded px-2 py-1"
+          className="input w-auto pr-7"
         >
           <option value="ALL">ステータス: すべて</option>
           {STATUSES.map((s) => (
@@ -61,73 +73,118 @@ export default async function ListPage({
             </option>
           ))}
         </select>
-        <input
-          type="search"
-          name="q"
-          defaultValue={sp.q ?? ""}
-          placeholder="🔍 検索"
-          className="text-sm border border-gray-300 rounded px-2 py-1 flex-1 min-w-40"
-        />
-        <button className="text-sm px-3 py-1 bg-gray-900 text-white rounded">
-          絞り込み
-        </button>
+        <div className="relative flex-1 min-w-[200px]">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none">
+            <IconSearch size={14} />
+          </span>
+          <input
+            type="search"
+            name="q"
+            defaultValue={sp.q ?? ""}
+            placeholder="検索"
+            className="input pl-9"
+          />
+        </div>
+        <button className="btn-primary">絞り込み</button>
       </form>
 
-      <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-gray-600 text-left">
+      <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
+        <table className="w-full text-[13.5px]">
+          <thead className="bg-zinc-50/70 text-zinc-500 text-left text-[11.5px] uppercase tracking-wider">
             <tr>
-              <th className="px-3 py-2 font-medium">タイトル</th>
-              <th className="px-3 py-2 font-medium">種別</th>
-              <th className="px-3 py-2 font-medium">ステータス</th>
-              <th className="px-3 py-2 font-medium">優先度</th>
-              <th className="px-3 py-2 font-medium">担当</th>
-              <th className="px-3 py-2 font-medium">納期</th>
-              <th className="px-3 py-2 font-medium">タスク</th>
+              <th className="px-4 py-3 font-medium">タイトル</th>
+              <th className="px-4 py-3 font-medium">種別</th>
+              <th className="px-4 py-3 font-medium">ステータス</th>
+              <th className="px-4 py-3 font-medium">優先度</th>
+              <th className="px-4 py-3 font-medium">担当</th>
+              <th className="px-4 py-3 font-medium">納期</th>
+              <th className="px-4 py-3 font-medium">進捗</th>
             </tr>
           </thead>
           <tbody>
-            {items.map((it) => (
-              <tr
-                key={it.id}
-                className="border-t border-gray-100 hover:bg-gray-50"
-              >
-                <td className="px-3 py-2">
-                  <Link
-                    href={`/items/${it.id}`}
-                    className="text-gray-900 hover:underline font-medium"
-                  >
-                    {it.title}
-                  </Link>
-                  {it.requester && (
-                    <span className="ml-2 text-xs text-gray-500">
-                      / 依頼: {it.requester}
-                    </span>
-                  )}
-                </td>
-                <td className="px-3 py-2 text-gray-600">{typeLabel(it.type)}</td>
-                <td className="px-3 py-2">
-                  <StatusBadge status={it.status} />
-                </td>
-                <td className="px-3 py-2">
-                  <PriorityBadge priority={it.priority} />
-                </td>
-                <td className="px-3 py-2 text-gray-600">
-                  {it.assignee ?? "—"}
-                </td>
-                <td className="px-3 py-2 text-gray-600">
-                  {it.dueDate
-                    ? new Date(it.dueDate).toLocaleDateString("ja-JP")
-                    : "—"}
-                </td>
-                <td className="px-3 py-2 text-gray-600">{it._count.tasks}</td>
-              </tr>
-            ))}
+            {items.map((it) => {
+              const total = it.tasks.length;
+              const done = it.tasks.filter((t) => t.done).length;
+              const overdue =
+                it.dueDate &&
+                new Date(it.dueDate).getTime() < Date.now() &&
+                it.status !== "PUBLISHED" &&
+                it.status !== "DONE";
+              return (
+                <tr
+                  key={it.id}
+                  className="border-t border-zinc-100 hover:bg-zinc-50/60 transition"
+                >
+                  <td className="px-4 py-3">
+                    <Link
+                      href={`/items/${it.id}`}
+                      className="text-zinc-900 hover:text-indigo-600 font-medium"
+                    >
+                      {it.title}
+                    </Link>
+                    {it.requester && (
+                      <div className="text-[11.5px] text-zinc-500 mt-0.5">
+                        依頼: {it.requester}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <TypeBadge type={it.type} label={typeLabel(it.type)} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={it.status} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <PriorityBadge priority={it.priority} />
+                  </td>
+                  <td className="px-4 py-3 text-zinc-600 text-[12.5px]">
+                    {it.assignee ?? <span className="text-zinc-300">—</span>}
+                  </td>
+                  <td className="px-4 py-3">
+                    {it.dueDate ? (
+                      <span
+                        className={`inline-flex items-center gap-1 text-[12.5px] ${
+                          overdue
+                            ? "text-rose-600 font-semibold"
+                            : "text-zinc-600"
+                        }`}
+                      >
+                        <IconClock size={12} />
+                        {new Date(it.dueDate).toLocaleDateString("ja-JP", {
+                          month: "numeric",
+                          day: "numeric",
+                        })}
+                      </span>
+                    ) : (
+                      <span className="text-zinc-300">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {total === 0 ? (
+                      <span className="text-zinc-300 text-[12.5px]">—</span>
+                    ) : (
+                      <div className="flex items-center gap-2 min-w-[100px]">
+                        <div className="flex-1 h-1.5 bg-zinc-100 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-emerald-500 rounded-full transition-all"
+                            style={{ width: `${(done / total) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-[11.5px] text-zinc-500 tabular-nums whitespace-nowrap inline-flex items-center gap-0.5">
+                          <IconCheck size={11} />
+                          {done}/{total}
+                        </span>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
             {items.length === 0 && (
               <tr>
                 <td
                   colSpan={7}
-                  className="px-3 py-8 text-center text-gray-400 text-sm"
+                  className="px-4 py-12 text-center text-zinc-400 text-[13px]"
                 >
                   該当する制作物がありません
                 </td>

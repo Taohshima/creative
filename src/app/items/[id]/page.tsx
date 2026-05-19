@@ -1,11 +1,7 @@
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import {
-  typeLabel,
-  STATUSES,
-  statusLabel,
-} from "@/lib/constants";
+import { typeLabel, STATUSES } from "@/lib/constants";
 import {
   setStatus,
   addTask,
@@ -15,6 +11,16 @@ import {
   deleteItem,
 } from "@/lib/actions";
 import { StatusBadge, PriorityBadge, TypeBadge } from "@/components/Badge";
+import {
+  IconCheck,
+  IconClock,
+  IconUser,
+  IconExternal,
+  IconEdit,
+  IconTrash,
+  IconPlus,
+  IconComment,
+} from "@/components/Icons";
 
 export const dynamic = "force-dynamic";
 
@@ -35,97 +41,120 @@ export default async function ItemDetailPage({
 
   const doneCount = item.tasks.filter((t) => t.done).length;
   const totalTasks = item.tasks.length;
+  const progress = totalTasks === 0 ? 0 : Math.round((doneCount / totalTasks) * 100);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* メイン */}
-      <div className="lg:col-span-2 space-y-6">
-        <div className="bg-white border border-gray-200 rounded-md p-6">
-          <div className="flex items-start justify-between gap-4 mb-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <TypeBadge type={item.type} label={typeLabel(item.type)} />
-                <StatusBadge status={item.status} />
-                <PriorityBadge priority={item.priority} />
+      <div className="lg:col-span-2 space-y-5">
+        {/* ヒーロー */}
+        <div className="card overflow-hidden">
+          {/* type gradient header */}
+          <div className={`thumb-${item.type} h-2`} />
+
+          <div className="p-6">
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 mb-2.5 flex-wrap">
+                  <TypeBadge type={item.type} label={typeLabel(item.type)} />
+                  <StatusBadge status={item.status} />
+                  <PriorityBadge priority={item.priority} />
+                </div>
+                <h1 className="text-[24px] font-semibold tracking-tight text-zinc-900 leading-tight">
+                  {item.title}
+                </h1>
               </div>
-              <h1 className="text-2xl font-bold">{item.title}</h1>
+              <div className="flex gap-2 flex-shrink-0">
+                <Link
+                  href={`/items/${item.id}/edit`}
+                  className="btn-secondary inline-flex items-center gap-1.5"
+                >
+                  <IconEdit size={13} />
+                  編集
+                </Link>
+                <form
+                  action={async () => {
+                    "use server";
+                    await deleteItem(item.id);
+                  }}
+                >
+                  <button className="btn-secondary inline-flex items-center gap-1.5 hover:!bg-rose-50 hover:!border-rose-200 hover:!text-rose-600">
+                    <IconTrash size={13} />
+                    削除
+                  </button>
+                </form>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Link
-                href={`/items/${item.id}/edit`}
-                className="text-sm px-3 py-1.5 border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                編集
-              </Link>
-              <form
-                action={async () => {
-                  "use server";
-                  await deleteItem(item.id);
-                }}
-              >
-                <button className="text-sm px-3 py-1.5 border border-red-200 text-red-600 rounded-md hover:bg-red-50">
-                  削除
-                </button>
-              </form>
-            </div>
+
+            {item.thumbnailUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={item.thumbnailUrl}
+                alt=""
+                className="w-full max-h-96 object-contain rounded-lg bg-zinc-50 mb-5 border border-zinc-100"
+              />
+            )}
+
+            {item.description && (
+              <div className="mb-5">
+                <SectionLabel>説明</SectionLabel>
+                <p className="text-[14px] text-zinc-700 whitespace-pre-wrap leading-relaxed">
+                  {item.description}
+                </p>
+              </div>
+            )}
+
+            {item.notes && (
+              <div className="mb-5">
+                <SectionLabel>メモ</SectionLabel>
+                <p className="text-[13.5px] text-zinc-600 whitespace-pre-wrap leading-relaxed bg-zinc-50/60 rounded-lg p-3 border border-zinc-100">
+                  {item.notes}
+                </p>
+              </div>
+            )}
+
+            {item.tags && (
+              <div className="flex gap-1.5 flex-wrap">
+                {item.tags
+                  .split(",")
+                  .map((t) => t.trim())
+                  .filter(Boolean)
+                  .map((t) => (
+                    <span
+                      key={t}
+                      className="text-[11.5px] bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded-md"
+                    >
+                      #{t}
+                    </span>
+                  ))}
+              </div>
+            )}
           </div>
-
-          {item.thumbnailUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={item.thumbnailUrl}
-              alt=""
-              className="w-full max-h-80 object-contain rounded-md bg-gray-50 mb-4"
-            />
-          )}
-
-          {item.description && (
-            <div className="mb-4">
-              <div className="text-xs text-gray-500 font-medium mb-1">説明</div>
-              <p className="text-sm whitespace-pre-wrap">{item.description}</p>
-            </div>
-          )}
-
-          {item.notes && (
-            <div className="mb-4">
-              <div className="text-xs text-gray-500 font-medium mb-1">メモ</div>
-              <p className="text-sm whitespace-pre-wrap text-gray-700">
-                {item.notes}
-              </p>
-            </div>
-          )}
-
-          {item.tags && (
-            <div className="flex gap-1.5 flex-wrap">
-              {item.tags
-                .split(",")
-                .map((t) => t.trim())
-                .filter(Boolean)
-                .map((t) => (
-                  <span
-                    key={t}
-                    className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded"
-                  >
-                    #{t}
-                  </span>
-                ))}
-            </div>
-          )}
         </div>
 
         {/* タスク */}
-        <div className="bg-white border border-gray-200 rounded-md p-6">
+        <div className="card p-6">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold">タスク</h2>
-            <span className="text-xs text-gray-500">
-              {doneCount} / {totalTasks}
-            </span>
+            <h2 className="font-semibold text-[15px] text-zinc-900">タスク</h2>
+            <div className="flex items-center gap-2.5">
+              {totalTasks > 0 && (
+                <div className="w-24 h-1.5 bg-zinc-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full transition-all"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              )}
+              <span className="text-[11.5px] text-zinc-500 tabular-nums">
+                {doneCount} / {totalTasks}
+              </span>
+            </div>
           </div>
-          <ul className="space-y-1.5 mb-4">
+          <ul className="space-y-0.5 mb-4">
             {item.tasks.map((t) => (
               <li
                 key={t.id}
-                className="flex items-center gap-2 group hover:bg-gray-50 rounded px-1 py-0.5"
+                className="flex items-center gap-2.5 group hover:bg-zinc-50 rounded-lg px-1.5 py-1.5 transition"
               >
                 <form
                   action={async () => {
@@ -134,19 +163,15 @@ export default async function ItemDetailPage({
                   }}
                 >
                   <button
-                    className={`w-4 h-4 rounded border ${
-                      t.done
-                        ? "bg-green-500 border-green-500 text-white"
-                        : "border-gray-300"
-                    } flex items-center justify-center text-xs`}
+                    className={`checkbox ${t.done ? "checked" : ""}`}
                     title={t.done ? "未完了に戻す" : "完了にする"}
                   >
-                    {t.done ? "✓" : ""}
+                    {t.done && <IconCheck size={11} />}
                   </button>
                 </form>
                 <span
-                  className={`text-sm flex-1 ${
-                    t.done ? "line-through text-gray-400" : ""
+                  className={`text-[13.5px] flex-1 ${
+                    t.done ? "line-through text-zinc-400" : "text-zinc-800"
                   }`}
                 >
                   {t.title}
@@ -158,16 +183,18 @@ export default async function ItemDetailPage({
                   }}
                 >
                   <button
-                    className="text-xs text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100"
+                    className="text-zinc-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition p-1"
                     title="削除"
                   >
-                    ✕
+                    <IconTrash size={13} />
                   </button>
                 </form>
               </li>
             ))}
             {item.tasks.length === 0 && (
-              <li className="text-sm text-gray-400">タスクがありません</li>
+              <li className="text-[13px] text-zinc-400 px-1.5 py-2">
+                タスクがありません
+              </li>
             )}
           </ul>
           <form
@@ -179,69 +206,83 @@ export default async function ItemDetailPage({
           >
             <input
               name="title"
-              placeholder="新しいタスク（例：初稿提出, 法務確認）"
-              className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+              placeholder="新しいタスク（例：初稿提出、法務確認）"
+              className="input flex-1"
             />
-            <button className="text-sm px-3 py-1 bg-gray-900 text-white rounded">
+            <button className="btn-primary">
+              <IconPlus size={13} />
               追加
             </button>
           </form>
         </div>
 
         {/* コメント */}
-        <div className="bg-white border border-gray-200 rounded-md p-6">
-          <h2 className="font-semibold mb-3">フィードバック / コメント</h2>
+        <div className="card p-6">
+          <h2 className="font-semibold text-[15px] text-zinc-900 mb-3 inline-flex items-center gap-2">
+            <IconComment size={15} />
+            フィードバック
+          </h2>
           <form
             action={async (fd) => {
               "use server";
               await addComment(item.id, fd);
             }}
-            className="space-y-2 mb-4"
+            className="space-y-2 mb-5"
           >
             <input
               name="author"
               placeholder="あなたの名前（任意）"
-              className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+              className="input"
             />
             <textarea
               name="body"
               required
               placeholder="修正依頼や確認事項を書く..."
               rows={2}
-              className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+              className="input resize-y"
             />
             <div className="flex justify-end">
-              <button className="text-sm px-3 py-1 bg-gray-900 text-white rounded">
-                投稿
-              </button>
+              <button className="btn-primary">投稿</button>
             </div>
           </form>
-          <ul className="space-y-3">
+          <ul className="space-y-4">
             {item.comments.map((c) => (
-              <li key={c.id} className="border-l-2 border-gray-200 pl-3">
-                <div className="text-xs text-gray-500 mb-0.5">
-                  <span className="font-medium text-gray-700">
-                    {c.author ?? "匿名"}
-                  </span>
-                  {" · "}
-                  {new Date(c.createdAt).toLocaleString("ja-JP")}
+              <li key={c.id} className="flex gap-3">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-100 to-fuchsia-100 grid place-items-center text-[11px] font-semibold text-indigo-700 flex-shrink-0">
+                  {(c.author ?? "?").charAt(0).toUpperCase()}
                 </div>
-                <div className="text-sm whitespace-pre-wrap">{c.body}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[11.5px] text-zinc-500 mb-0.5">
+                    <span className="font-semibold text-zinc-700">
+                      {c.author ?? "匿名"}
+                    </span>
+                    <span className="mx-1.5">·</span>
+                    {new Date(c.createdAt).toLocaleString("ja-JP", {
+                      month: "numeric",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </div>
+                  <div className="text-[13.5px] text-zinc-800 whitespace-pre-wrap leading-relaxed">
+                    {c.body}
+                  </div>
+                </div>
               </li>
             ))}
             {item.comments.length === 0 && (
-              <li className="text-sm text-gray-400">コメントはまだありません</li>
+              <li className="text-[13px] text-zinc-400">
+                コメントはまだありません
+              </li>
             )}
           </ul>
         </div>
       </div>
 
       {/* サイドバー */}
-      <div className="space-y-4">
-        <div className="bg-white border border-gray-200 rounded-md p-4">
-          <h3 className="text-xs font-semibold text-gray-500 mb-3">
-            ステータス変更
-          </h3>
+      <aside className="space-y-4">
+        <div className="card p-4">
+          <SectionLabel>ステータスを変更</SectionLabel>
           <div className="grid grid-cols-2 gap-1.5">
             {STATUSES.map((s) => (
               <form
@@ -252,13 +293,12 @@ export default async function ItemDetailPage({
                 }}
               >
                 <button
-                  className={`w-full text-xs px-2 py-1.5 rounded badge-${
-                    s.value
-                  } ${
+                  className={`w-full pill pill-${s.value} justify-center transition ${
                     item.status === s.value
-                      ? "ring-2 ring-offset-1 ring-gray-400"
-                      : "opacity-70 hover:opacity-100"
+                      ? "ring-2 ring-offset-1 ring-zinc-300 !font-semibold"
+                      : "opacity-60 hover:opacity-100"
                   }`}
+                  style={{ width: "100%" }}
                 >
                   {s.label}
                 </button>
@@ -267,10 +307,19 @@ export default async function ItemDetailPage({
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-md p-4 space-y-2 text-sm">
-          <KV k="依頼者" v={item.requester} />
-          <KV k="制作担当" v={item.assignee} />
+        <div className="card p-5 space-y-3.5">
           <KV
+            icon={<IconUser size={13} />}
+            k="依頼者"
+            v={item.requester}
+          />
+          <KV
+            icon={<IconUser size={13} />}
+            k="制作担当"
+            v={item.assignee}
+          />
+          <KV
+            icon={<IconClock size={13} />}
             k="納期"
             v={
               item.dueDate
@@ -280,13 +329,14 @@ export default async function ItemDetailPage({
           />
           <KV k="サイズ / 仕様" v={item.size} />
           <KV
+            icon={item.publishUrl ? <IconExternal size={13} /> : undefined}
             k="公開先"
             v={
               item.publishUrl ? (
                 <a
                   href={item.publishUrl}
                   target="_blank"
-                  className="text-blue-600 hover:underline break-all"
+                  className="text-indigo-600 hover:underline break-all"
                 >
                   {item.publishUrl}
                 </a>
@@ -306,16 +356,37 @@ export default async function ItemDetailPage({
             v={new Date(item.createdAt).toLocaleDateString("ja-JP")}
           />
         </div>
-      </div>
+      </aside>
     </div>
   );
 }
 
-function KV({ k, v }: { k: string; v: React.ReactNode }) {
+function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex gap-2">
-      <div className="w-20 text-gray-500 text-xs flex-shrink-0 pt-0.5">{k}</div>
-      <div className="flex-1 text-sm">{v || <span className="text-gray-400">—</span>}</div>
+    <div className="text-[10.5px] font-semibold uppercase tracking-wider text-zinc-400 mb-2">
+      {children}
+    </div>
+  );
+}
+
+function KV({
+  icon,
+  k,
+  v,
+}: {
+  icon?: React.ReactNode;
+  k: string;
+  v: React.ReactNode;
+}) {
+  return (
+    <div className="flex gap-3 items-start">
+      <div className="w-20 flex-shrink-0 text-[11.5px] text-zinc-500 pt-0.5 inline-flex items-center gap-1">
+        {icon}
+        {k}
+      </div>
+      <div className="flex-1 text-[13px] text-zinc-800 min-w-0 break-words">
+        {v || <span className="text-zinc-300">—</span>}
+      </div>
     </div>
   );
 }

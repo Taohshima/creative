@@ -21,9 +21,14 @@ export default async function EditItemPage({
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <h1 className="text-xl font-bold mb-4">制作物を編集</h1>
-      <ItemForm action={action} defaults={item} submitLabel="保存" />
+    <div className="max-w-3xl mx-auto space-y-5">
+      <div>
+        <h1 className="text-[22px] font-semibold tracking-tight text-zinc-900">
+          制作物を編集
+        </h1>
+        <p className="text-[13px] text-zinc-500 mt-0.5">{item.title}</p>
+      </div>
+      <ItemForm action={action} defaults={item} submitLabel="保存する" />
     </div>
   );
 }
